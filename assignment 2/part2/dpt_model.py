@@ -52,7 +52,6 @@ class DeepPromptCLIP(nn.Module):
         prompts = torch.cat([clip.tokenize(p) for p in prompts])
         prompts = prompts.to(args.device)
 
-
         #######################
         # PUT YOUR CODE HERE  #
         #######################
@@ -64,10 +63,8 @@ class DeepPromptCLIP(nn.Module):
         # - Given a list of prompts, compute the text features for each prompt.
         # - Return a tensor of shape (num_prompts, 512).
 
-        with torch.no_grad():
-            prompt_tokens = torch.cat([clip.tokenize(p) for p in prompts]).to(args.device)
-            text_features = clip_model.encode_text(prompt_tokens)
-            text_features / text_features.norm(dim=-1, keepdim=True)
+        text_features = clip_model.encode_text(prompts)
+        text_features / text_features.norm(dim=-1, keepdim=True)
 
         # remove this line once you implement the function
         # raise NotImplementedError("Write the code to compute text features.")
@@ -89,7 +86,7 @@ class DeepPromptCLIP(nn.Module):
         # TODO: Initialize the learnable deep prompt.
         # Hint: consider the shape required for the deep prompt to be compatible with the CLIP model 
 
-        self.deep_prompt = torch.rand(1)
+        self.deep_prompt = torch.nn.Parameter(torch.rand((50, 1, 768)))
 
         # remove this line once you implement the function
         # raise NotImplementedError("Write the code to compute text features.")
@@ -116,7 +113,12 @@ class DeepPromptCLIP(nn.Module):
         # - Return logits of shape (batch size, number of classes).
 
         # remove this line once you implement the function
-        raise NotImplementedError("Implement the model_inference function.")
+
+        image_features = self.custom_encode_image(image)
+        image_features_norm = image_features / image_features.norm(dim=-1, keepdim=True)
+        similarity = self.logit_scale * image_features_norm @ self.text_features.T
+
+        return similarity
 
         #######################
         # END OF YOUR CODE    #
@@ -128,7 +130,6 @@ class DeepPromptCLIP(nn.Module):
 
         x = x.type(self.clip_model.dtype)
         image_encoder = self.clip_model.visual
-        
         x = image_encoder.conv1(x)  # shape = [*, width, grid, grid]
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
@@ -154,10 +155,12 @@ class DeepPromptCLIP(nn.Module):
 
         # remove this line once you implement the function
 
+        print(self.injection_layer)
         for i, block in enumerate(image_encoder.transformer.resblocks):
             x = block(x)
+            print(i, x.shape)
             if i == self.injection_layer:
-                x += self.deep_prompt
+                x = x + self.deep_prompt
 
         # raise NotImplementedError("Implement the model_inference function.")
 

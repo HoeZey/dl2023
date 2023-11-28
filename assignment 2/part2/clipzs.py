@@ -328,6 +328,7 @@ def main():
     # Part 0.0: Read options from command line & fix seed
     args = parse_option()
     # device = args.device
+    args.dataset = 'cifar100'
     device = args.device
     set_seed(args.seed)
 
