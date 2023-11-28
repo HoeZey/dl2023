@@ -80,7 +80,7 @@ def parse_option():
 
     # dataset
     parser.add_argument("--root", type=str, default="./data", help="dataset")
-    parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")
+    parser.add_argument("--dataset", type=str, default="cifar10", help="dataset")
     parser.add_argument("--image_size", type=int, default=224, help="image size")
     parser.add_argument(
         "--test_noise", default=False, action="store_true",
@@ -139,14 +139,15 @@ def parse_option():
 def main():
     torch.autograd.set_detect_anomaly(True)
     args = parse_option()
-    print(args)
+    # args.prompt_type = 'deep_prompt'
+    args.dataset = 'cifar100'
+    # print(args)
     learn = Learner(args)
     print(f'Using device {args.device}')
 
     if args.evaluate:
         learn.evaluate("test")
     else:
-        # learn.resume_checkpoint()
         learn.run()
         learn.evaluate("valid")
         learn.evaluate("test")
