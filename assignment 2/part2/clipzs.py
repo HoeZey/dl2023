@@ -51,7 +51,7 @@ def parse_option():
     )
 
     # dataset
-    parser.add_argument("--root", type=str, default="./data", help="dataset")
+    parser.add_argument("--root", type=str, default="../data", help="dataset")
     parser.add_argument(
         "--dataset",
         type=str,
@@ -267,6 +267,7 @@ def load_dataset(dataset, root, split, preprocess):
     if dataset not in DATASET:
         raise ValueError(f"{dataset} is not supported. Choose among {DATASET.keys()}")
     is_train_split = split == "train"
+    print(root)
     dataset = DATASET[dataset](
         root, transform=preprocess, download=True, train=is_train_split
     )
@@ -327,8 +328,7 @@ def visualize_predictions(images, logits, classnames, fig_file):
 def main():
     # Part 0.0: Read options from command line & fix seed
     args = parse_option()
-    # device = args.device
-    args.dataset = 'cifar100'
+    args.dataset = 'cifar10'
     device = args.device
     set_seed(args.seed)
 

@@ -79,7 +79,7 @@ def parse_option():
     )
 
     # dataset
-    parser.add_argument("--root", type=str, default="./data", help="dataset")
+    parser.add_argument("--root", type=str, default="../data", help="dataset")
     parser.add_argument("--dataset", type=str, default="cifar10", help="dataset")
     parser.add_argument("--image_size", type=int, default=224, help="image size")
     parser.add_argument(
