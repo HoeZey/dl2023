@@ -23,7 +23,7 @@ code_dir=./
 # Standard constants
 arch="ViT-B/32"
 text_prompt_template="This is a photo of a {}"
-epochs=20
+epochs=1000
 
 ## Set of experiments on CIFAR-10
 dataset="cifar10"
@@ -32,7 +32,7 @@ mkdir -p $root
 
 datasets=(cifar10)
 methods=(fixed_patch)
-prompt_sizes=(1)
+prompt_sizes=(30)
 
 for dataset in "${datasets[@]}"; do
     for i in "${!methods[@]}"; do

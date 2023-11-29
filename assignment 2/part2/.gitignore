@@ -3,3 +3,4 @@ save/
 ../**/data/
 ../**/save/
 test_*.txt
+__pycache__/

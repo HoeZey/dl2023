@@ -1,0 +1,59 @@
+***************************************************************************************************** 
+* WARNING: The 2021 software stack is not available on the 'genoa' partition.
+Please use the 2022 * 
+* software stack. * 
+* * 
+* If you have any question, please contact us via
+http://servicedesk.surfsara.nl. * 
+***************************************************************************************************** 
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius+and+Lisa#SoftwarepolicySnelliusandLisa-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+mkdir: cannot create directory '/scratch': Permission denied
+Traceback (most recent call last):
+  File "/gpfs/home2/scur1309/dl2023/assignment 2/part2/.//clipzs.py", line 410, in <module>
+    main()
+  File "/gpfs/home2/scur1309/dl2023/assignment 2/part2/.//clipzs.py", line 340, in main
+    dataset = load_dataset(args.dataset, args.root, args.split, preprocess)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home2/scur1309/dl2023/assignment 2/part2/.//clipzs.py", line 270, in load_dataset
+    dataset = DATASET[dataset](
+              ^^^^^^^^^^^^^^^^^
+  File "/home/scur1309/.conda/envs/dl2023/lib/python3.11/site-packages/torchvision/datasets/cifar.py", line 65, in __init__
+    self.download()
+  File "/home/scur1309/.conda/envs/dl2023/lib/python3.11/site-packages/torchvision/datasets/cifar.py", line 139, in download
+    download_and_extract_archive(self.url, self.root, filename=self.filename, md5=self.tgz_md5)
+  File "/home/scur1309/.conda/envs/dl2023/lib/python3.11/site-packages/torchvision/datasets/utils.py", line 434, in download_and_extract_archive
+    download_url(url, download_root, filename, md5)
+  File "/home/scur1309/.conda/envs/dl2023/lib/python3.11/site-packages/torchvision/datasets/utils.py", line 123, in download_url
+    os.makedirs(root, exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 225, in makedirs
+PermissionError: [Errno 13] Permission denied: '/scratch'
+
+JOB STATISTICS
+==============
+Job ID: 4544560
+Cluster: snellius
+User/Group: scur1309/scur1309
+State: RUNNING
+Nodes: 4
+Cores per node: 72
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 01:12:00 core-walltime
+Job Wall-clock time: 00:00:15
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 125.00 GB (31.25 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.
