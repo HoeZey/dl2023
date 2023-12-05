@@ -70,10 +70,13 @@ class VAE(pl.LightningModule):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        L_rec = None
-        L_reg = None
-        bpd = None
-        raise NotImplementedError
+        mean, log_std = self.encoder(imgs)
+        z = sample_reparameterize(mean, np.exp(log_std))
+        imgs_hat = self.decoder(z)
+
+        L_rec = nn.functional.cross_entropy(imgs_hat, imgs)
+        L_reg = KLD(mean, log_std)
+        bpd = elbo_to_bpd(L_rec + L_reg)
         #######################
         # END OF YOUR CODE    #
         #######################

@@ -34,9 +34,9 @@ def sample_reparameterize(mean, std):
                                        "Are you sure your input is std and not log_std?"
     #######################
     # PUT YOUR CODE HERE  #
-    #######################
-    z = None
-    raise NotImplementedError
+    #######################'
+    noise = torch.randn(mean.shape)
+    z = mean + std * noise
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -58,8 +58,7 @@ def KLD(mean, log_std):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    KLD = None
-    raise NotImplementedError
+    KLD = (torch.exp(2 * log_std) + mean**2 - 1 - 2 * log_std).sum(dim=-1) / 2
     #######################
     # END OF YOUR CODE    #
     #######################
@@ -78,8 +77,7 @@ def elbo_to_bpd(elbo, img_shape):
     #######################
     # PUT YOUR CODE HERE  #
     #######################
-    bpd = None
-    raise NotImplementedError
+    bpd = elbo * np.log2(np.e) / np.prod(img_shape[1:])
     #######################
     # END OF YOUR CODE    #
     #######################
