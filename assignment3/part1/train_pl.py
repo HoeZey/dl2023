@@ -66,20 +66,14 @@ class VAE(pl.LightningModule):
         # - By default, torch.nn.functional.cross_entropy takes the mean accross
         #   all axes. Do not forget to change the 'reduction' parameter to
         #   make it consistent with the loss definition of the assignment.
-
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
         mean, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mean, np.exp(log_std))
+        z = sample_reparameterize(mean, torch.exp(log_std))
         imgs_hat = self.decoder(z)
 
-        L_rec = nn.functional.cross_entropy(imgs_hat, imgs)
-        L_reg = KLD(mean, log_std)
-        bpd = elbo_to_bpd(L_rec + L_reg)
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        L_rec = nn.functional.cross_entropy(imgs_hat, imgs.squeeze())
+        L_reg = KLD(mean, log_std).mean()
+        bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
+
         return L_rec, L_reg, bpd
 
     @torch.no_grad()
@@ -91,14 +85,8 @@ class VAE(pl.LightningModule):
         Outputs:
             x_samples - Sampled, 4-bit images. Shape: [B,C,H,W]
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        x_samples = None
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        z_samples = torch.randn((batch_size, self.decoder.linear[0].in_features))
+        x_samples = self.decoder(z_samples).argmax(dim=1, keepdim=True)
         return x_samples
 
     def configure_optimizers(self):
@@ -126,7 +114,7 @@ class VAE(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # Make use of the forward function, and add logging statements
-        L_rec, L_reg, bpd = self.forward(batch[0])
+        _, _, bpd = self.forward(batch[0])
         self.log("test_bpd", bpd)
 
 
@@ -193,13 +181,14 @@ def train_vae(args):
                          callbacks=[save_callback, gen_callback],
                          enable_progress_bar=args.progress_bar)
     trainer.logger._default_hp_metric = None  # Optional logging argument that we don't need
+
     if not args.progress_bar:
         print("[INFO] The progress bar has been suppressed. For updates on the training " + \
               f"progress, check the TensorBoard file at {trainer.logger.log_dir}. If you " + \
               "want to see the progress bar, use the argparse option \"progress_bar\".\n")
 
     # Create model
-    pl.seed_everything(args.seed)  # To be reproducible
+    pl.seed_everything(args.seed) # To be reproducible
     model = VAE(num_filters=args.num_filters,
                 z_dim=args.z_dim,
                 lr=args.lr)
@@ -240,22 +229,23 @@ if __name__ == '__main__':
                         help='Minibatch size')
 
     # Other hyperparameters
-    parser.add_argument('--data_dir', default='../data/', type=str,
+    parser.add_argument('--data_dir', default='/data/', type=str,
                         help='Directory where to look for the data. For jobs on Lisa, this should be $TMPDIR.')
     parser.add_argument('--epochs', default=80, type=int,
                         help='Max number of epochs')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--num_workers', default=4, type=int,
+    parser.add_argument('--num_workers', default=0, type=int,
                         help='Number of workers to use in the data loaders. To have a truly deterministic run, this has to be 0. ' + \
                              'For your assignment report, you can use multiple workers (e.g. 4) and do not have to set it to 0.')
-    parser.add_argument('--log_dir', default='VAE_logs', type=str,
+    parser.add_argument('--log_dir', default='/VAE_logs/', type=str,
                         help='Directory where the PyTorch Lightning logs should be created.')
     parser.add_argument('--progress_bar', action='store_true',
                         help=('Use a progress bar indicator for interactive experimentation. '
                               'Not to be used in conjuction with SLURM jobs'))
 
     args = parser.parse_args()
+    args.progress_bar = True
 
     train_vae(args)
 

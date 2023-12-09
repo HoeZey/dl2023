@@ -39,6 +39,7 @@ class CNNEncoder(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         c_hid = num_filters
+        act_fn = nn.GELU
         self.net = nn.Sequential(
             nn.Conv2d(num_input_channels, c_hid, kernel_size=3, padding=1, stride=2), # 32x32 => 16x16
             act_fn(),
@@ -51,7 +52,7 @@ class CNNEncoder(nn.Module):
             nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 8x8 => 4x4
             act_fn(),
             nn.Flatten(), # Image grid to single feature vector
-            nn.Linear(2*16*c_hid, latent_dim)
+            nn.Linear(2*16*c_hid, z_dim)
         )
         #######################
         # END OF YOUR CODE    #
@@ -79,7 +80,7 @@ class CNNEncoder(nn.Module):
 
 
 class CNNDecoder(nn.Module):
-    def __init__(self, num_input_channels: int = 16, num_filters: int = 32,
+    def __init__(self, num_input_channels: int = 16, num_filters: int = 28,
                  z_dim: int = 20):
         """Decoder with a CNN network.
         Inputs:
@@ -98,12 +99,13 @@ class CNNDecoder(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         c_hid = num_filters
+        act_fn = nn.GELU
         self.linear = nn.Sequential(
-            nn.Linear(latent_dim, 2*16*c_hid),
+            nn.Linear(z_dim, 2*16*c_hid),
             act_fn()
         )
         self.net = nn.Sequential(
-            nn.ConvTranspose2d(2*c_hid, 2*c_hid, kernel_size=3, output_padding=1, padding=1, stride=2), # 4x4 => 8x8
+            nn.ConvTranspose2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 4x4 => 8x8
             act_fn(),
             nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1),
             act_fn(),
@@ -127,16 +129,9 @@ class CNNDecoder(nn.Module):
                 This should be a logit output *without* a softmax applied on it.
                 Shape: [B,num_input_channels,28,28]
         """
-
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        x = self.linear(x)
+        x = self.linear(z)
         x = x.reshape(x.shape[0], -1, 4, 4)
         x = self.net(x)
-        #######################
-        # END OF YOUR CODE    #
-        #######################
         return x
 
     @property

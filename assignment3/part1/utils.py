@@ -32,14 +32,8 @@ def sample_reparameterize(mean, std):
     """
     assert not (std < 0).any().item(), "The reparameterization trick got a negative std as input. " + \
                                        "Are you sure your input is std and not log_std?"
-    #######################
-    # PUT YOUR CODE HERE  #
-    #######################'
     noise = torch.randn(mean.shape)
     z = mean + std * noise
-    #######################
-    # END OF YOUR CODE    #
-    #######################
     return z
 
 
@@ -54,14 +48,7 @@ def KLD(mean, log_std):
         KLD - Tensor with one less dimension than mean and log_std (summed over last dimension).
               The values represent the Kullback-Leibler divergence to unit Gaussians.
     """
-
-    #######################
-    # PUT YOUR CODE HERE  #
-    #######################
-    KLD = (torch.exp(2 * log_std) + mean**2 - 1 - 2 * log_std).sum(dim=-1) / 2
-    #######################
-    # END OF YOUR CODE    #
-    #######################
+    KLD = ((2 * log_std).exp() + mean.square() - 1 - 2 * log_std).sum(dim=-1) / 2
     return KLD
 
 
@@ -74,13 +61,7 @@ def elbo_to_bpd(elbo, img_shape):
     Outputs:
         bpd - The negative log likelihood in bits per dimension for the given image.
     """
-    #######################
-    # PUT YOUR CODE HERE  #
-    #######################
     bpd = elbo * np.log2(np.e) / np.prod(img_shape[1:])
-    #######################
-    # END OF YOUR CODE    #
-    #######################
     return bpd
 
 

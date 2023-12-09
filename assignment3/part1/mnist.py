@@ -24,7 +24,7 @@ import numpy as np
 def discretize(x, num_values):
     return (x * num_values).long().clamp_(max=num_values-1)
 
-def mnist(root='../data/', batch_size=128, num_workers=4, download=True):
+def mnist(root='/data/', batch_size=128, num_workers=4, download=True):
     """
     Returns data loaders for 4-bit MNIST dataset, i.e. values between 0 and 15.
 
