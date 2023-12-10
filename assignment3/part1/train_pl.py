@@ -67,7 +67,7 @@ class VAE(pl.LightningModule):
         #   all axes. Do not forget to change the 'reduction' parameter to
         #   make it consistent with the loss definition of the assignment.
         mean, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mean, log_std.exp())
+        z = sample_reparameterize(mean, log_std.exp()).to(self.device)
         imgs_hat = self.decoder(z)
 
         L_rec = F.cross_entropy(imgs_hat, imgs.squeeze(), reduction='sum') / imgs.shape[0]

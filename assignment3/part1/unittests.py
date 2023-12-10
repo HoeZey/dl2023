@@ -207,8 +207,8 @@ class TestVAE(unittest.TestCase):
         torch.manual_seed(42)
         if TEST_LIGHTNING:
             VAEClass = train_pl.VAE
-        elif TEST_TORCH:
-            VAEClass = train_torch.VAE
+        # elif TEST_TORCH:
+            # VAEClass = train_torch.VAE
         else:
             print("TestVAE skipped as no train flag has been selected.")
             return

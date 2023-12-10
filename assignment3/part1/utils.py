@@ -85,15 +85,10 @@ def visualize_manifold(decoder, grid_size=20):
     # - torch.meshgrid might be helpful for creating the grid of values
     # - You can use torchvision's function "make_grid" to combine the grid_size**2 images into a grid
     # - Remember to apply a softmax after the decoder
-
-    #######################
-    # PUT YOUR CODE HERE  #
-    #######################
-    img_grid = None
-    raise NotImplementedError
-    #######################
-    # END OF YOUR CODE    #
-    #######################
-
+    grid_range = (torch.arange(1, grid_size + 1) - 0.5) / grid_size
+    perc_range = torch.distributions.Normal(0, 1).icdf(grid_range)
+    zs = torch.cartesian_prod(perc_range, perc_range)
+    imgs = [decoder(z) for z in zs]
+    img_grid = make_grid(imgs)
     return img_grid
 
