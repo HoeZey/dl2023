@@ -32,8 +32,8 @@ def sample_reparameterize(mean, std):
     """
     assert not (std < 0).any().item(), "The reparameterization trick got a negative std as input. " + \
                                        "Are you sure your input is std and not log_std?"
-    noise = torch.randn(mean.shape)
-    z = mean + std * noise
+    noise = torch.randn(mean.shape, device=mean.device)
+    z = mean + noise * std
     return z
 
 

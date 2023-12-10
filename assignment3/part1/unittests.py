@@ -221,7 +221,7 @@ class TestVAE(unittest.TestCase):
 
         rand_img = torch.randint(low=0, high=16, size=(4, 1, 28, 28)).long()
         L_rec, L_reg, bpd = vae(rand_img)
-
+        
         # Testing shapes
         self.assertTrue(len(L_rec.squeeze().shape) == 0,
                         msg="The L_rec output must be a scalar, but has the shape %s." % str(bpd.shape))

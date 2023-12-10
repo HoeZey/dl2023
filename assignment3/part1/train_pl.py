@@ -67,10 +67,10 @@ class VAE(pl.LightningModule):
         #   all axes. Do not forget to change the 'reduction' parameter to
         #   make it consistent with the loss definition of the assignment.
         mean, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mean, torch.exp(log_std))
+        z = sample_reparameterize(mean, log_std.exp())
         imgs_hat = self.decoder(z)
 
-        L_rec = nn.functional.cross_entropy(imgs_hat, imgs.squeeze())
+        L_rec = F.cross_entropy(imgs_hat, imgs.squeeze(), reduction='sum') / imgs.shape[0]
         L_reg = KLD(mean, log_std).mean()
         bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
 
@@ -193,8 +193,10 @@ def train_vae(args):
                 z_dim=args.z_dim,
                 lr=args.lr)
 
-    # Training
+    # Training  
     gen_callback.sample_and_save(trainer, model, epoch=0)  # Initial sample
+    gen_callback.sample_and_save(trainer, model, epoch=10)  
+    gen_callback.sample_and_save(trainer, model, epoch=args.epochs)
     trainer.fit(model, train_loader, val_loader)
 
     # Testing
@@ -208,7 +210,7 @@ def train_vae(args):
                    os.path.join(trainer.logger.log_dir, 'vae_manifold.png'),
                    normalize=False)
 
-    return test_result
+    return test_result  
 
 
 if __name__ == '__main__':
@@ -246,6 +248,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.progress_bar = True
+    args.epochs = 1
 
     train_vae(args)
 

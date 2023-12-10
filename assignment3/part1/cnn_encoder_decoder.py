@@ -16,7 +16,6 @@
 
 import torch
 import torch.nn as nn
-import numpy as np
 
 
 class CNNEncoder(nn.Module):
@@ -52,8 +51,10 @@ class CNNEncoder(nn.Module):
             nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 8x8 => 4x4
             act_fn(),
             nn.Flatten(), # Image grid to single feature vector
-            nn.Linear(2*16*c_hid, z_dim)
         )
+        self.mean_layer = nn.Linear(2*16*c_hid, z_dim)
+        self.std_layer = nn.Linear(2*16*c_hid, z_dim)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -71,8 +72,9 @@ class CNNEncoder(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        mean = self.net(x)
-        log_std = self.net(x)
+        z = self.net(x)
+        mean = self.mean_layer(z)
+        log_std = self.std_layer(z)
         #######################
         # END OF YOUR CODE    #
         #######################
