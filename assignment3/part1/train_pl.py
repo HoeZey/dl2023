@@ -67,7 +67,7 @@ class VAE(pl.LightningModule):
         #   all axes. Do not forget to change the 'reduction' parameter to
         #   make it consistent with the loss definition of the assignment.
         mean, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mean, log_std.exp()).to(self.device)
+        z = sample_reparameterize(mean, log_std.exp())
         imgs_hat = self.decoder(z)
 
         L_rec = F.cross_entropy(imgs_hat, imgs.squeeze(), reduction='sum') / imgs.shape[0]
@@ -85,7 +85,7 @@ class VAE(pl.LightningModule):
         Outputs:
             x_samples - Sampled, 4-bit images. Shape: [B,C,H,W]
         """
-        z_samples = torch.randn((batch_size, self.decoder.linear[0].in_features))
+        z_samples = torch.randn((batch_size, self.decoder.linear[0].in_features), device=self.device)
         x_samples = self.decoder(z_samples).argmax(dim=1, keepdim=True)
         return x_samples
 
