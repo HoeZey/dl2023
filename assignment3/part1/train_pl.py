@@ -71,7 +71,7 @@ class VAE(pl.LightningModule):
         imgs_hat = self.decoder(z)
 
         L_rec = F.cross_entropy(imgs_hat, imgs.squeeze(), reduction='sum') / imgs.shape[0]
-        L_reg = KLD(mean, log_std).mean()
+        L_reg = KLD(mean, log_std).sum()
         bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
 
         return L_rec, L_reg, bpd

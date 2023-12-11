@@ -30,13 +30,6 @@ class CNNEncoder(nn.Module):
             z_dim - Dimensionality of latent representation z
         """
         super().__init__()
-
-        # For an intial architecture, you can use the encoder of Tutorial 9.
-        # Feel free to experiment with the architecture yourself, but the one specified here is
-        # sufficient for the assignment.
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
         c_hid = num_filters
         act_fn = nn.GELU
         self.net = nn.Sequential(
@@ -55,10 +48,6 @@ class CNNEncoder(nn.Module):
         self.mean_layer = nn.Linear(2*16*c_hid, z_dim)
         self.std_layer = nn.Linear(2*16*c_hid, z_dim)
 
-        #######################
-        # END OF YOUR CODE    #
-        #######################
-
     def forward(self, x):
         """
         Inputs:
@@ -68,16 +57,9 @@ class CNNEncoder(nn.Module):
             log_std - Tensor of shape [B,z_dim] representing the predicted log standard deviation
                       of the latent distributions.
         """
-        x = x.float() / 15 * 2.0 - 1.0  # Move images between -1 and 1
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        z = self.net(x)
+        z = self.net(x.float())
         mean = self.mean_layer(z)
         log_std = self.std_layer(z)
-        #######################
-        # END OF YOUR CODE    #
-        #######################
         return mean, log_std
 
 
@@ -93,13 +75,6 @@ class CNNDecoder(nn.Module):
             z_dim - Dimensionality of latent representation z
         """
         super().__init__()
-
-        # For an intial architecture, you can use the decoder of Tutorial 9.
-        # Feel free to experiment with the architecture yourself, but the one specified here is
-        # sufficient for the assignment.
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
         c_hid = num_filters
         act_fn = nn.GELU
         self.linear = nn.Sequential(
@@ -118,9 +93,6 @@ class CNNDecoder(nn.Module):
             nn.ConvTranspose2d(c_hid, num_input_channels, kernel_size=3, output_padding=1, padding=1, stride=2), # 16x16 => 32x32
             nn.Tanh() # The input images is scaled between -1 and 1, hence the output has to be bounded as well
         )
-        #######################
-        # END OF YOUR CODE    #
-        #######################
 
     def forward(self, z):
         """

@@ -14,6 +14,7 @@
 # Date Created: 2022-11-25
 ################################################################################
 
+from sympy import Si
 import torch
 from torchvision.utils import make_grid
 import numpy as np
@@ -88,7 +89,7 @@ def visualize_manifold(decoder, grid_size=20):
     grid_range = (torch.arange(1, grid_size + 1) - 0.5) / grid_size
     perc_range = torch.distributions.Normal(0, 1).icdf(grid_range)
     zs = torch.cartesian_prod(perc_range, perc_range)
-    imgs = [decoder(z) for z in zs]
-    img_grid = make_grid(imgs)
-    return img_grid
+    imgs = decoder(zs).argmax(dim=1, keepdim=True)
+    img_grid = make_grid(imgs, nrow=grid_size)
+    return img_grid.float()
 

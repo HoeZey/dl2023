@@ -20,7 +20,8 @@ import torch.nn.functional as F
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, num_input_channels: int = 1, num_filters: int = 32,
+                 z_dim: int = 20):
         """
         Convolutional Encoder network with Convolution and Linear layers, ReLU activations. The output layer
         uses a Fully connected layer to embed the representation to a latent code with z_dim dimension.
@@ -28,16 +29,22 @@ class ConvEncoder(nn.Module):
             z_dim - Dimensionality of the latent code space.
         """
         super(ConvEncoder, self).__init__()
-        # For an intial architecture, you can use the encoder of Tutorial 9.
-        # Feel free to experiment with the architecture yourself, but the one specified here is
-        # sufficient for the assignment.
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        c_hid = num_filters
+        act_fn = nn.ReLU
+        self.net = nn.Sequential(
+            nn.Conv2d(num_input_channels, c_hid, kernel_size=3, padding=1, stride=2), # 32x32 => 16x16
+            act_fn(),
+            nn.Conv2d(c_hid, c_hid, kernel_size=3, padding=1),
+            act_fn(),
+            nn.Conv2d(c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 16x16 => 8x8
+            act_fn(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1),
+            act_fn(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 8x8 => 4x4
+            act_fn(),
+            nn.Flatten(), # Image grid to single feature vector
+            nn.Linear(2*16*c_hid, z_dim)
+        )
 
     def forward(self, x):
         """
@@ -46,14 +53,8 @@ class ConvEncoder(nn.Module):
         Outputs:
             z - Output of latent codes [B, z_dim]
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        x = None
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        x = x.float() / 15 * 2.0 - 1.0  # Move images between -1 and 1
+        z = self.net(x)
         return z
 
     @property
@@ -65,7 +66,8 @@ class ConvEncoder(nn.Module):
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, num_input_channels: int = 16, num_filters: int = 28,
+                 z_dim: int = 20):
         """
         Convolutional Decoder network with linear and deconvolution layers and ReLU activations. The output layer
         uses a Tanh activation function to scale the output between -1 and 1.
@@ -73,34 +75,36 @@ class ConvDecoder(nn.Module):
               z_dim - Dimensionality of the latent code space.
         """
         super(ConvDecoder, self).__init__()
-        # For an intial architecture, you can use the decoder of Tutorial 9. You can set the
-        # output padding in the first transposed convolution to 0 to get 28x28 outputs.
-        # Feel free to experiment with the architecture yourself, but the one specified here is
-        # sufficient for the assignment.
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        c_hid = num_filters
+        act_fn = nn.GELU
+        self.linear = nn.Sequential(
+            nn.Linear(z_dim, 2*16*c_hid),
+            act_fn()
+        )
+        self.net = nn.Sequential(
+            nn.ConvTranspose2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1, stride=2), # 4x4 => 8x8
+            act_fn(),
+            nn.Conv2d(2*c_hid, 2*c_hid, kernel_size=3, padding=1),
+            act_fn(),
+            nn.ConvTranspose2d(2*c_hid, c_hid, kernel_size=3, output_padding=1, padding=1, stride=2), # 8x8 => 16x16
+            act_fn(),
+            nn.Conv2d(c_hid, c_hid, kernel_size=3, padding=1),
+            act_fn(),
+            nn.ConvTranspose2d(c_hid, num_input_channels, kernel_size=3, output_padding=1, padding=1, stride=2), # 16x16 => 32x32
+            nn.Tanh() # The input images is scaled between -1 and 1, hence the output has to be bounded as well
+        )
 
     def forward(self, z):
         """
         Inputs:
             z - Batch of latent codes. Shape: [B,z_dim]
         Outputs:
-            recon_x - Reconstructed image of shape [B,C,H,W]
+            x - Reconstructed image of shape [B,C,H,W]
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        recon_x = None
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
-        return recon_x
+        x = self.linear(z)
+        x = x.reshape(x.shape[0], -1, 4, 4)
+        x = self.net(x)
+        return x
 
 
 class Discriminator(nn.Module):
@@ -111,16 +115,15 @@ class Discriminator(nn.Module):
               z_dim - Dimensionality of the latent code space.
         """
         super(Discriminator, self).__init__()
-        # You are allowed to experiment with the architecture and change the activation function, normalization, etc.
-        # However, the default setup is sufficient to generate fine images and gain full points in the assignment.
-        # As a default setup, we recommend 3 linear layers (512 for hidden units) with LeakyReLU activation functions (negative slope 0.2).
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        act_fn = nn.LeakyReLU(negative_slope=0.2)
+        c_hid = 512
+        self.net = nn.Sequential(
+            nn.Linear(z_dim, c_hid),
+            act_fn(),
+            nn.Linear(c_hid, c_hid),
+            act_fn(),
+            nn.Linear(c_hid, 1),
+        )
 
     def forward(self, z):
         """
@@ -130,14 +133,7 @@ class Discriminator(nn.Module):
             preds - Predictions whether a specific latent code is fake (<0) or real (>0). 
                     No sigmoid should be applied on the output. Shape: [B,1]
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        preds = None
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
+        preds = self.forward(z)
         return preds
 
     @property
@@ -149,7 +145,8 @@ class Discriminator(nn.Module):
 
 
 class AdversarialAE(nn.Module):
-    def __init__(self, z_dim=8):
+    def __init__(self, z_dim: int = 20, 
+                 num_input_channels: int = 16, num_filters: int = 28):
         """
         Adversarial Autoencoder network with a Encoder, Decoder and Discriminator.
         Inputs:
@@ -157,8 +154,8 @@ class AdversarialAE(nn.Module):
         """
         super(AdversarialAE, self).__init__()
         self.z_dim = z_dim
-        self.encoder = ConvEncoder(z_dim)
-        self.decoder = ConvDecoder(z_dim)
+        self.encoder = ConvEncoder(num_input_channels, num_filters, z_dim)
+        self.decoder = ConvDecoder(num_input_channels, num_filters, z_dim)
         self.discriminator = Discriminator(z_dim)
 
     def forward(self, x):
@@ -169,22 +166,15 @@ class AdversarialAE(nn.Module):
             recon_x - Reconstructed image of shape [B,C,H,W]
             z - Batch of latent codes. Shape: [B,z_dim]
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        recon_x_ = None
-        z = None
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
-        return recon_x, z
+        z = self.encoder(x)
+        x_hat = self.decoder(z)
+        return x_hat, z
 
-    def get_loss_autoencoder(self, x, recon_x, z_fake, lambda_=1):
+    def get_loss_autoencoder(self, x, x_hat, z_fake, lambda_=1):
         """
         Inputs:
             x - Batch of input images. Shape: [B,C,H,W]
-            recon_x - Reconstructed image of shape [B,C,H,W]
+            x_hat - Reconstructed image of shape [B,C,H,W]
             z_fake - Batch of latent codes for fake samples. Shape: [B,z_dim]
             lambda_ - The reconstruction coefficient (between 0 and 1).
 
@@ -194,20 +184,15 @@ class AdversarialAE(nn.Module):
             ae_loss - The combined adversarial and reconstruction loss for AAE
                 lambda_ * reconstruction loss + (1 - lambda_) * adversarial loss
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        ae_loss = None
-        logging_dict = {"gen_loss": None,
-                        "recon_loss": None,
-                        "ae_loss": None}
-        raise NotImplementedError
-        #######################
-        # END OF YOUR CODE    #
-        #######################
-        return ae_loss, logging_dict
+        L_rec = nn.MSELoss(x_hat, x)
+        L_gen = self.get_loss_discriminator(z_fake)
+        L_ae = (1 - lambda_) * L_rec + lambda_ * L_gen
+        logging_dict = {"gen_loss": L_gen,
+                        "recon_loss": L_rec,
+                        "ae_loss": L_ae}
+        return L_ae, logging_dict
 
-    def get_loss_discriminator(self,  z_fake):
+    def get_loss_discriminator(self, z_fake):
         """
         Inputs:
             z_fake - Batch of latent codes for fake samples. Shape: [B,z_dim]
@@ -220,13 +205,13 @@ class AdversarialAE(nn.Module):
                 loss_fake - The discriminator loss for latent codes extracted by encoder from input
                 accuracy - The accuracy of the discriminator for both real and fake samples.
         """
-        #######################
-        # PUT YOUR CODE HERE  #
-        #######################
-        disc_loss = None
-        logging_dict = {"disc_loss": None,
-                        "loss_real": None,
-                        "loss_fake": None,
+        z_real = torch.randn((z_fake.shape))
+        loss_fake = (self.discriminator(z_fake) < 0).float().sum()
+        loss_real = (self.discriminator(z_real) >= 0).float().sum()
+        disc_loss = loss_fake + loss_real
+        logging_dict = {"disc_loss": disc_loss,
+                        "loss_real": loss_real,
+                        "loss_fake": loss_fake,
                         "accuracy": None}
         raise NotImplementedError
         #######################
